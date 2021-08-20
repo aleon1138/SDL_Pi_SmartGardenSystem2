@@ -98,22 +98,24 @@ sudo pip3 install setuptools --upgrade
 sudo pip3 install i2cdevice apscheduler adafruit-blinka picamera mysqlclient paho-mqtt
 sudo pip3 install pillow dash dash-bootstrap-components plotly remi pandas dash_daq
 
-- mkdir SwitchDoc
-- cd SwitcDoc
-- git clone github.com/adafruit/Adafruit_Python_GPIO.git
-- cd Adafruit_Python_GPIO
-- sudo python3 setup.py install
-- cd ~/SwitchDoc
-- git clone github.com/switchdoclabs/SDL_Pi_8PixelStrip.git
-- cd SDL_Pi_8PixelStrip
-- scons
-- cd python
-- sudo python3 ./setup.py build
-- sudo python3 ./setup.py install
-- git clone github.com/switchdoclabs/SDL_Pi_SmartGardenSystem2
-- cd ~/SwitchDoc
-- cd SDL_Pi_SmartGardenSystem2
-- sudo mysql -u root < SmartGardenSystem.sql
-- sudo python3 SGSConfigure.py
-- sudo python3 SSG2.py
+mkdir SwitchDoc
+cd SwitcDoc
+git clone https://github.com/adafruit/Adafruit_Python_GPIO.git
+cd Adafruit_Python_GPIO
+sudo python3 setup.py install
+
+cd ~/SwitchDoc
+git clone https://github.com/switchdoclabs/SDL_Pi_8PixelStrip.git
+cd SDL_Pi_8PixelStrip
+scons
+cd python
+sudo python3 setup.py build
+sudo python3 setup.py install
+ 
+cd ~/SwitchDoc
+git clone https://github.com/switchdoclabs/SDL_Pi_SmartGardenSystem2
+cd SDL_Pi_SmartGardenSystem2
+sudo mysql -u root < SmartGardenSystem.sql
+sudo python3 SGSConfigure.py
+sudo python3 SSG2.py
 ```
