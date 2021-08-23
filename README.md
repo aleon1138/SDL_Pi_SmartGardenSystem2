@@ -93,10 +93,9 @@ sudo raspi-config
 # Test to see if I2C isworking
 sudo i2cdetect -y 1
 
-sudo pip3 install --upgrade setuptools pip
-sudo pip3 install setuptools --upgrade
-sudo pip3 install i2cdevice apscheduler adafruit-blinka picamera mysqlclient paho-mqtt
-sudo pip3 install pillow dash dash-bootstrap-components plotly remi pandas dash_daq
+pip3 install --upgrade setuptools pip
+pip3 install i2cdevice apscheduler adafruit-blinka picamera mysqlclient paho-mqtt
+pip3 install pillow dash dash-bootstrap-components plotly remi pandas dash_daq
 
 mkdir SwitchDoc
 cd SwitcDoc
