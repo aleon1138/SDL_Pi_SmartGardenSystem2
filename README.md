@@ -108,7 +108,7 @@ git clone https://github.com/switchdoclabs/SDL_Pi_8PixelStrip.git
 cd SDL_Pi_8PixelStrip
 scons
 cd python
-sudo python3 setup.py build
+python3 setup.py build
 sudo python3 setup.py install
  
 cd ~/SwitchDoc
