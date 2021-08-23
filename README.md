@@ -1,19 +1,21 @@
 # SmartGardenSystem 2 - Version May 2020 and on<BR>
 **SwitchDoc Labs**
  
-**May 2020**
+## Version History
 
-Version 021 - October 1, 2020 - Added compatiblitly with new WeatherSense WeatherRack2 and Indoor T/H<BR>
-Version 020 - September 4, 2020 - Added Orchid Features, small bug fixes<BR>
-Version 019 - August 14, 2020 - Added Indoor TH page on dash_app<BR> 
-Version 018 - August 13, 2020 - Fixed Manual Valve Activation Log Entry<BR> 
-Version 017 - August 12, 2020 - Fixed testMoistureSensors.py problem <BR> 
-Version 016 - August 1, 2020 - Fixed Pi4 Rev2 problem - Kludge - just disables Pixels<BR>
-Version 014 - July 14, 2020 - First Release Version <BR>
-Version 013 - July 13, 2020 - Release Candidate One <BR>
-Version 005 - June 5, 2020 - More modifications to dash_app and wireless<BR>
-Version 005 - June 3, 2020 - Added GardenCam / WeatherSTEM code<BR>
-Version 003 - May 11, 2020 - Added dashboard code<BR>
+| Version     | Date            | Description |
+| ----------- | --------------- | :---------- |
+| Version 021 | October 1, 2020 | Added compatiblitly with new WeatherSense WeatherRack2 and Indoor T/H |
+| Version 020 | September 4, 2020 | Added Orchid Features, small bug fixes |
+| Version 019 | August 14, 2020 | Added Indoor TH page on dash_app |
+| Version 018 | August 13, 2020 | Fixed Manual Valve Activation Log Entry |
+| Version 017 | August 12, 2020 | Fixed testMoistureSensors.py problem | 
+| Version 016 | August 1, 2020 | Fixed Pi4 Rev2 problem - Kludge - just disables Pixels |
+| Version 014 | July 14, 2020 | First Release Version |
+| Version 013 | July 13, 2020 | Release Candidate One |
+| Version 005 | June 5, 2020 | More modifications to dash_app and wireless |
+| Version 005 | June 3, 2020 | Added GardenCam / WeatherSTEM code |
+| Version 003 | May 11, 2020 | Added dashboard code |
 
 To see what is happening on the MQTT channels:
 ```
