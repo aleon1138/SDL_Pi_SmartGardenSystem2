@@ -72,19 +72,17 @@ From our customer `frenchi`, he has summarized installation instructions:
 
 > I just followed the instructions from Raspberry using the Raspberry Pi imager App -- it reformats the SD Card which 
 > simply allow the Pi4 to reload its boot sw.
->
-> After sudo apt-get -y update && apt-get -u dist-upgrade
 > 
 > Note I placed all the SDL software in a directory called SwitchDoc :-)
 
 ```bash
-sudo apt-get clean
-sudo apt-get autoremove
- 
-sudo apt install -y build-essential python3 python3-pip python3-dev python3-smbus git
-sudo apt install -y python3-apscheduler pigpio python3-pigpio i2c-tools mariadb-server mosquitto
-sudo apt install -y mosquitto-clients python-imaging-tk libjpeg-dev zlib1g-dev libfreetype6-dev
-sudo apt install -y liblcms1-dev libopenjp2-7 libtiff5 scons swig
+sudo apt update
+sudo apt -y upgrade
+sudo apt -y autoremove
+
+sudo apt install -y build-essential python3 python3-pip python3-dev python3-smbus git python3-apscheduler pigpio
+sudo apt install -y python3-pigpio i2c-tools mariadb-server mosquitto mosquitto-clients python-imaging-tk libatlas-base-dev
+sudo apt install -y libjpeg-dev zlib1g-dev libfreetype6-dev liblcms1-dev libopenjp2-7 libtiff5 scons swig vim
 
 # Install MariaDB on Raspberry Pi
 sudo mysql_secure_installation
@@ -97,10 +95,9 @@ sudo i2cdetect -y 1
 
 pip3 install --upgrade setuptools pip
 pip3 install i2cdevice apscheduler adafruit-blinka picamera mysqlclient paho-mqtt
-pip3 install pillow dash dash-bootstrap-components plotly remi pandas dash_daq
+pip3 install pillow dash dash-bootstrap-components plotly remi pandas dash_daq psutil
 
-mkdir SwitchDoc
-cd SwitcDoc
+mkdir SwitchDoc && cd SwitcDoc
 git clone https://github.com/adafruit/Adafruit_Python_GPIO.git
 cd Adafruit_Python_GPIO
 sudo python3 setup.py install
@@ -112,11 +109,12 @@ scons
 cd python
 python3 setup.py build
 sudo python3 setup.py install
- 
+
 cd ~/SwitchDoc
 git clone https://github.com/switchdoclabs/SDL_Pi_SmartGardenSystem2
 cd SDL_Pi_SmartGardenSystem2
 sudo mysql -u root < SmartGardenSystem.sql
-sudo python3 SGSConfigure.py
-sudo python3 SSG2.py
+
+python3 SGSConfigure.py
+python3 SSG2.py
 ```
