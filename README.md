@@ -93,9 +93,9 @@ sudo raspi-config
 # Test to see if I2C isworking
 sudo i2cdetect -y 1
 
-pip3 install --upgrade setuptools pip
-pip3 install i2cdevice apscheduler adafruit-blinka picamera mysqlclient paho-mqtt
-pip3 install pillow dash dash-bootstrap-components plotly remi pandas dash_daq psutil
+sudo pip3 install --upgrade setuptools pip
+sudo pip3 install i2cdevice apscheduler adafruit-blinka picamera mysqlclient paho-mqtt future
+sudo pip3 install pillow dash dash-bootstrap-components plotly remi pandas dash_daq psutil
 
 mkdir SwitchDoc && cd SwitcDoc
 git clone https://github.com/adafruit/Adafruit_Python_GPIO.git
@@ -115,6 +115,6 @@ git clone https://github.com/switchdoclabs/SDL_Pi_SmartGardenSystem2
 cd SDL_Pi_SmartGardenSystem2
 sudo mysql -u root < SmartGardenSystem.sql
 
-python3 SGSConfigure.py
-python3 SSG2.py
+sudo python3 SGSConfigure.py
+sudo python3 SSG2.py
 ```
