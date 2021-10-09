@@ -1,88 +1,58 @@
 #!/usr/bin/env python3
+"""
+Smart Garden System 2
+SwitchDoc Labs
+"""
 
-#
-# Smart Garden System 2
-#
-# SwitchDoc Labs
-#
+# pylint: disable=wrong-import-position
+# pylint: disable=missing-function-docstring
+# pylint: disable=wrong-import-order
 
 from __future__ import division
 from __future__ import print_function
 from builtins import range
-from past.utils import old_div
 
 SGSVERSION = "021"
 
-# imports
-
-import sys, traceback
+import sys
+import traceback
 import os
 import RPi.GPIO as GPIO
 import time
 import threading
 import json
-import pickle
 import picamera
 import subprocess
 
 from bmp280 import BMP280
 import SkyCamera
 import readJSON
-
 import logging
 
 logging.basicConfig(level=logging.ERROR)
 
 import updateBlynk
 
-# appends
 sys.path.append("./SDL_Pi_SSD1306")
 sys.path.append("./Adafruit_Python_SSD1306")
 
 from neopixel import *
-
 import pixelDriver
-
-
 from PIL import Image
-from PIL import ImageDraw
-from PIL import ImageFont
-
 import Adafruit_SSD1306
-
 import Scroll_SSD1306
-
-
-import ultrasonicRanger
-
-
 import datetime
-
 from apscheduler.schedulers.background import BackgroundScheduler
-
 import apscheduler.events
-
 import scanForResources
 
-
 import config
-
-if config.enable_MySQL_Logging == True:
-    import MySQLdb as mdb
-
 import pclogging
-
 import state
-
 import Valves
-
-
 import AccessMS
-
 import AccessValves
-
 import weatherSensors
-
 import wiredSensors
 
 # initialization
@@ -100,7 +70,7 @@ state.UpdateStateLock = threading.Lock()
 ###############
 
 # Create NeoPixel object with appropriate configuration.
-if config.enablePixel == True:
+if config.enablePixel:
     strip = Adafruit_NeoPixel(
         pixelDriver.LED_COUNT,
         pixelDriver.LED_PIN,
@@ -121,23 +91,15 @@ if config.enablePixel == True:
 ###############
 
 
-def blinkLED(pixel, color, times, length):
-    if config.enablePixel == True:
-        if state.runLEDs == True:
-            PixelLock.acquire()
-
-            # if (config.SWDEBUG):
-            #    print("N--->Blink LED:%i/%i/%i/%6.2f" % (pixel, color, times, length))
-
-            for x in range(0, times):
+def blinkLED(_, color, times, length):
+    if config.enablePixel and state.runLEDs:
+        with PixelLock:
+            for _ in range(times):
                 strip.setPixelColor(0, color)
                 strip.show()
                 time.sleep(length)
-
             strip.setPixelColor(0, Color(0, 0, 0))
             strip.show()
-
-            PixelLock.release()
 
 
 ################
@@ -149,7 +111,6 @@ def blinkLED(pixel, color, times, length):
 try:
     RST = 27
     display = Adafruit_SSD1306.SSD1306_128_64(rst=RST, i2c_address=0x3C)
-    # Initialize library.
     display.begin()
     display.clear()
     display.display()
@@ -157,25 +118,9 @@ try:
     OLEDLock = threading.Lock()
 except:
     config.OLED_Present = False
-    # print("Smart Garden System must have OLED Present")
-    # raise SystemExit
 
 
-###############
-# Ultrasonic Level Test
-###############
-"""
-percentFull = ultrasonicRanger.returnPercentFull()
-# check for abort
-if (percentFull < 0.0):
-    if (config.SWDEBUG):
-        print("---->Bad Measurement from Ultrasonic Sensor for Tank Level")
-    config.UltrasonicLevel_Present = False
-else:
-    config.UltrasonicLevel_Present = True
-"""
-
-import util
+# import util
 
 ###############
 # MQTT Setup for Wireless
@@ -233,17 +178,17 @@ except:
 
 
 def tick():
-    print("The time is: %s" % datetime.datetime.now())
+    print(f"The time is: {datetime.datetime.now()}")
+    sys.stdout.flush()
 
 
 def killLogger():
     state.scheduler.shutdown()
     print("Scheduler Shutdown....")
-    exit()
+    sys.exit()
 
 
 def checkAndWater():
-
     pass
 
 
@@ -254,44 +199,19 @@ def ap_my_listener(event):
 
 
 def returnStatusLine(device, state):
-
-    returnString = device
-    if state == True:
-        returnString = returnString + ":   \t\tPresent"
-    else:
-        returnString = returnString + ":   \t\tNot Present"
+    out = f"  [{'X' if state else ' '}] {device}"
     if config.USEBLYNK:
-        updateBlynk.blynkTerminalUpdate("Device:" + returnString)
-    return returnString
-
-
-#############################
-# get and store sensor state
-#############################
+        updateBlynk.blynkTerminalUpdate("Device:" + out)
+    return out
 
 
 def checkForButtons():
-
     if config.USEBLYNK:
         updateBlynk.blynkStatusUpdate()
 
 
-#############################
-# Alarm Displays
-#############################
 def checkForAlarms():
-
     pass
-
-
-def centerText(text, sizeofline):
-    textlength = len(text)
-    spacesCount = old_div((sizeofline - textlength), 2)
-    mytext = ""
-    if spacesCount > 0:
-        for x in range(0, spacesCount):
-            mytext = mytext + " "
-    return mytext + text
 
 
 #############################
@@ -309,13 +229,10 @@ def initializeSGSPart1():
 
     # read in JSON
     # read in JSON
-    if readJSON.readJSON("") == False:
-        print("#############################")
-        print(
-            "No SGS.JSON file present - configure with 'sudo python3 SGSConfigure.py'"
-        )
-        print("#############################")
-        exit()
+    if not readJSON.readJSON(""):
+        print("No SGS.JSON file present", file=sys.stderr)
+        print("configure with 'sudo python3 SGSConfigure.py'", file=sys.stderr)
+        sys.exit()
 
     readJSON.readJSONSGSConfiguration("")
     # init blynk app state
@@ -338,8 +255,6 @@ def initializeSGSPart1():
     # get if weather is being used
     config.Weather_Present = readJSON.getJSONValue("weather")
 
-    pass
-
 
 def initializeSGSPart2():
 
@@ -351,9 +266,6 @@ def initializeSGSPart2():
     print(returnStatusLine("OLED", config.OLED_Present))
     print(returnStatusLine("BMP280", config.BMP280_Present))
     print(returnStatusLine("DustSensor", config.DustSensor_Present))
-    # print(returnStatusLine("Sunlight Sensor",config.Sunlight_Present))
-    # print(returnStatusLine("hdc1000 Sensor",config.hdc1000_Present))
-    # print(returnStatusLine("Ultrasonic Level Sensor",config.UltrasonicLevel_Present))
 
     print("----------------------")
     print("Checking Wireless SGS Devices")
@@ -383,10 +295,9 @@ def initializeSGSPart2():
         print("################################")
         print("No Wireless SGS uinits present - run SGSConfigure.py")
         print("################################")
-        exit()
+        sys.exit()
 
-    # wait for connection
-    while state.WirelessMQTTClientConnected != True:  # Wait for connection
+    while not state.WirelessMQTTClientConnected:
         time.sleep(0.1)
 
     # subscribe to IDs
@@ -399,10 +310,7 @@ def initializeSGSPart2():
         myJSON = {}
         myJSON["id"] = single["id"]
         myJSON["valvestate"] = "V00000000"
-
         pclogging.writeMQTTValveChangeRecord(myJSON)
-
-    print()
 
     print()
     print("----------------------")
@@ -432,14 +340,13 @@ def initializeSGSPart2():
     print(returnStatusLine("SunAirPlus", config.SunAirPlus_Present))
     print(returnStatusLine("SolarMAX", config.SunAirPlus_Present))
     print(returnStatusLine("Lightning Mode", config.Lightning_Mode))
-
     print(returnStatusLine("MySQL Logging Mode", config.enable_MySQL_Logging))
     print(returnStatusLine("UseBlynk", config.USEBLYNK))
-    print()
     print("----------------------")
+    sys.stdout.flush()
 
     # Establish WeatherSTEMHash
-    if config.USEWEATHERSTEM == True:
+    if config.USEWEATHERSTEM:
         state.WeatherSTEMHash = SkyCamera.SkyWeatherKeyGeneration(config.STATIONKEY)
 
 
@@ -457,10 +364,9 @@ def initializeScheduler():
         # start in 10 seconds
         starttime = datetime.datetime.now() + datetime.timedelta(seconds=30)
 
-        wsjob = state.scheduler.add_job(
+        state.scheduler.add_job(
             weatherSensors.readSensors, run_date=starttime
         )  # run in background
-        # weatherSensors.readSensors()
 
         state.scheduler.add_job(
             weatherSensors.writeWeatherRecord, "interval", seconds=15 * 60
@@ -481,7 +387,7 @@ def initializeScheduler():
     )
 
     # blink life light
-    if config.enablePixel == True:
+    if config.enablePixel:
         state.scheduler.add_job(
             pixelDriver.statusLEDs, "interval", seconds=15, args=[strip, PixelLock]
         )
@@ -490,7 +396,6 @@ def initializeScheduler():
     state.scheduler.add_job(
         scanForResources.updateDeviceStatus, "interval", seconds=6 * 120, args=[False]
     )
-    # state.scheduler.add_job(scanForResources.updateDeviceStatus, 'interval', seconds=60, args=[False])
 
     # sky camera
     if config.USEWEATHERSTEM:
@@ -510,9 +415,6 @@ def initializeScheduler():
     # check for alarms
     state.scheduler.add_job(checkForAlarms, "interval", seconds=15)
     # state.scheduler.add_job(checkForAlarms, 'interval', seconds=300)
-
-    # if (config.USEBLYNK):
-    #     state.scheduler.add_job(updateBlynk.blynkStateUpdate, 'interval', seconds=60)
 
     # MS sensor Read
     AccessMS.initMoistureSensors()
@@ -536,12 +438,10 @@ def initializeScheduler():
     state.scheduler.add_job(Valves.manualCheck, "interval", seconds=15)
 
     if config.DustSensor_Present:
-        # scheduler.add_job(DustSensor.read_AQI, 'interval', seconds=60*5)
         state.scheduler.add_job(DustSensor.read_AQI, "interval", seconds=60 * 11)
 
 
 def initializeSGSPart3():
-
     if config.SWDEBUG:
         if config.USEBLYNK:
             print("Blynk Status=", updateBlynk.blynkSGSAppOnline())
@@ -553,31 +453,16 @@ def initializeSGSPart3():
         updateBlynk.blynkEventUpdate()
 
     if config.OLED_Present:
-        if config.LOCKDEBUG:
-            print("Attempt OLEDLock acquired")
-        OLEDLock.acquire()
-        if config.LOCKDEBUG:
-            print("OLEDLock acquired")
-        # display logo
-        image = Image.open("SmartPlantPiSquare128x64.ppm").convert("1")
+        with OLEDLock:
+            image = Image.open("SmartPlantPiSquare128x64.ppm").convert("1")
+            display.image(image)
+            display.display()
+            time.sleep(3.0)
+            display.clear()
+            Scroll_SSD1306.addLineOLED(display, ("    Welcome to "))
+            Scroll_SSD1306.addLineOLED(display, ("   Smart Garden "))
 
-        display.image(image)
-        display.display()
-        time.sleep(3.0)
-        display.clear()
-
-        Scroll_SSD1306.addLineOLED(display, ("    Welcome to "))
-        Scroll_SSD1306.addLineOLED(display, ("   Smart Garden "))
-        if config.LOCKDEBUG:
-            print("Attempt OLEDLock released")
-        OLEDLock.release()
-        if config.LOCKDEBUG:
-            print("OLEDLock released")
-
-    # initialize variables
-    #
     state.Pump_Water_Full = False
-
     checkAndWater()
     checkForAlarms()
 
@@ -597,7 +482,6 @@ def pauseScheduler():
     state.scheduler.pause()
     print("After get_jobs=", jobs)
     state.scheduler.print_jobs()
-    pass
 
 
 def restartSGS():
@@ -614,8 +498,6 @@ def restartSGS():
     state.scheduler.print_jobs()
 
     initializeSGSPart3()
-
-    pass
 
 
 #############################
@@ -635,7 +517,6 @@ if __name__ == "__main__":
         print(output)
         time.sleep(5)
     except:
-        # print(traceback.format_exc())
         pass
 
     cmd = ["/usr/bin/pigpiod"]
@@ -649,10 +530,6 @@ if __name__ == "__main__":
     try:
         DustSensor.powerOnDustSensor()
         myData = DustSensor.get_data()
-        # print ("data=",myData)
-        # myAQI = DustSensor.get_aqi()
-        # DustSensor.print_data()
-        # print ("AQI=", myAQI)
         DustSensor.powerOffDustSensor()
         config.DustSensor_Present = True
     except:
@@ -661,61 +538,33 @@ if __name__ == "__main__":
     pclogging.readLastHour24AQI()
     initializeSGSPart1()
 
-    # this is the big exception clause that will turn all pumps off if there is a problem
     try:
-
         initializeSGSPart2()
         state.scheduler = BackgroundScheduler()
 
         initializeScheduler()
 
-        # start state.scheduler
         state.scheduler.start()
         print("-----------------")
         print("Scheduled Jobs")
-        print("-----------------")
         state.scheduler.print_jobs()
         print("-----------------")
 
         initializeSGSPart3()
 
-        #############
-        #  Main Loop
-        #############
-
         while True:
-            # check for new JSON files
-            if os.path.exists("NEWJSON") == True:
-                # remove file
-                print("-----------------------")
-                print("New JSON files detected")
-                print("SGS2 reloading JSON configuration")
-                print("-----------------------")
+            if os.path.exists("NEWJSON"):
+                print("New JSON files detected, reloading...")
                 os.remove("NEWJSON")
                 restartSGS()
                 pclogging.systemlog(config.INFO, "Reloading SGS with New JSON")
-            else:
-                # print("No New JSON Files Detected")
-                pass
-
-            time.sleep(10.0)
+            time.sleep(10)
 
     except KeyboardInterrupt:
-        # here you put any code you want to run before the program
-        # exits when you press CTRL+C
         print("exiting program")
-    # except:
-    # this catches ALL other exceptions including errors.
-    # You won't get any error messages for debugging
-    # so only use it once your code is working
-    # print "Other error or exception occurred!"
 
     finally:
-        # time.sleep(5)
-        # GPIO.cleanup() # this ensures a clean exit
         AccessValves.turnOffAllValves()
-        # saveState()
         state.WirelessMQTTClient.disconnect()
         state.WirelessMQTTClient.loop_stop()
-
         print("done")
