@@ -45,6 +45,7 @@ import state
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 
+
 def getAndPrint():
 
     print("Grove Ultrasonic get level and print")
@@ -53,7 +54,7 @@ def getAndPrint():
     for i in range(10):
         print("%5.3fcm" % measurementInCM())
     # Reset GPIO settings
-    #GPIO.cleanup()
+    # GPIO.cleanup()
 
 
 def measurementInCM():
@@ -77,22 +78,22 @@ def measurementInCM():
     # get duration from Ultrasonic SIG pin
     while GPIO.input(config.UltrasonicLevel) == 0:
         start = time.time()
-        if (measurementStartTime+2<start):
+        if measurementStartTime + 2 < start:
             # abort
             return -1
-    
-    if (start == -1):
+
+    if start == -1:
         # abort
         return -1
 
     measurementStartTime = time.time()
     while GPIO.input(config.UltrasonicLevel) == 1:
         stop = time.time()
-        if (measurementStartTime+2<stop):
+        if measurementStartTime + 2 < stop:
             # abort
             return -1
 
-    if (stop == -1):
+    if stop == -1:
         # abort
         return -1
 
@@ -103,9 +104,8 @@ def measurementInCM():
 
 def measurementPulse(start, stop):
 
-
     # Calculate pulse length
-    elapsed = stop-start
+    elapsed = stop - start
 
     # Distance pulse travelled in that time is time
     # multiplied by the speed of sound (cm/s)
@@ -114,11 +114,12 @@ def measurementPulse(start, stop):
     # That was the distance there and back so halve the value
     distance = old_div(distance, 2)
 
-    return distance 
+    return distance
+
 
 def readCalibrationNumbers():
 
-    f = open("TankCalibration","r")
+    f = open("TankCalibration", "r")
 
     line = f.read()
     line = line.strip()
@@ -127,19 +128,23 @@ def readCalibrationNumbers():
     state.Tank_Full_Level = float(full)
     f.close()
 
+
 def returnPercentFull():
     measurement = measurementInCM()
 
-    #check for abort
-    if (measurement < 0.0):
+    # check for abort
+    if measurement < 0.0:
         return -1.00
     state.Tank_Level = measurement
-    
-    
-    full = (old_div((state.Tank_Empty_Level - state.Tank_Level),(state.Tank_Empty_Level - state.Tank_Full_Level)))*100.0
 
+    full = (
+        old_div(
+            (state.Tank_Empty_Level - state.Tank_Level),
+            (state.Tank_Empty_Level - state.Tank_Full_Level),
+        )
+    ) * 100.0
 
-    if (config.SWDEBUG):
+    if config.SWDEBUG:
         print("returnPercentFull")
         print("state.Tank_Level:", state.Tank_Level)
         print("state.Tank_Empty_Level:", state.Tank_Empty_Level)
@@ -147,12 +152,11 @@ def returnPercentFull():
         print("Old Tank_Percentage_Full= %f" % state.Tank_Percentage_Full)
         print("New Tank_Percentage_Full= %f" % full)
 
-    if (full < 0.0):
+    if full < 0.0:
         full = 0.0
-    if (full > 100.0):
+    if full > 100.0:
         full = 100.0
-    if (config.SWDEBUG):
+    if config.SWDEBUG:
         print("Adjusted Tank_Percentage_Full= %f" % full)
 
     return full
-

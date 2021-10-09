@@ -17,51 +17,56 @@ import requests
 
 import subprocess
 
-from  bmp280 import BMP280
+from bmp280 import BMP280
 
 
 def sendCommandToWireless(myIP, myCommand):
-        myURL = 'http://'+str(myIP)+'/'+myCommand
-        print ("sending REST URL = ", myURL) 
-        try:
-                req = requests.get(myURL,timeout=30)
-                returnJSON = req.json()
+    myURL = "http://" + str(myIP) + "/" + myCommand
+    print("sending REST URL = ", myURL)
+    try:
+        req = requests.get(myURL, timeout=30)
+        returnJSON = req.json()
 
-        except Exception:
-                traceback.print_exc()
-                return {} 
-        return returnJSON 
+    except Exception:
+        traceback.print_exc()
+        return {}
+    return returnJSON
 
 
 def turnOnTimedValve(singleValve):
 
-        myIP = singleValve["ipaddress"]
+    myIP = singleValve["ipaddress"]
 
-        myCommand = "setSingleValve?params=admin,"+str(singleValve["ValveNumber"])+",1,"+str(singleValve["OnTimeInSeconds"])
-        return sendCommandToWireless(myIP, myCommand)
+    myCommand = (
+        "setSingleValve?params=admin,"
+        + str(singleValve["ValveNumber"])
+        + ",1,"
+        + str(singleValve["OnTimeInSeconds"])
+    )
+    return sendCommandToWireless(myIP, myCommand)
+
 
 def turnOnAndReadMoistureSensors():
     sendCommandToWireless(SGSEXT_IP, "enableMoistureSensors?params=admin,1,1,1,1")
     myJSON = sendCommandToWireless(SGSEXT_IP, "readMoistureSensors?params=admin")
     return myJSON
 
-# Main Program
-if __name__ == '__main__':
 
+# Main Program
+if __name__ == "__main__":
 
     print("###########################")
     print("Smart Garden System 2 System Test")
     print("###########################")
-    print('%s' % datetime.datetime.now())
+    print("%s" % datetime.datetime.now())
     print()
-    if (SGSEXT_IP == ""):
+    if SGSEXT_IP == "":
         print("###########################")
         print("Error: MUST SET SGSEXT_IP to run Wireless Extender test")
         print("###########################")
         exit()
     print("Wireless Extender Address = ", SGSEXT_IP)
     # test connection to Barometer
-
 
     ################
     # BMP280 Test
@@ -72,23 +77,21 @@ if __name__ == '__main__':
     except ImportError:
         from smbus import SMBus
 
-
     # Initialise the BMP280
     bus = SMBus(1)
     bmp280 = BMP280(i2c_dev=bus, i2c_addr=0x77)
-    
+
     try:
-            bmp280 = BMP280(i2c_dev=bus, i2c_addr=0x77)
-            config.BMP280_Present = True
-    except Exception as e: 
-            if (config.SWDEBUG):
-                print ("I/O error({0}): {1}".format(e.errno, e.strerror))
-                print(traceback.format_exc())
+        bmp280 = BMP280(i2c_dev=bus, i2c_addr=0x77)
+        config.BMP280_Present = True
+    except Exception as e:
+        if config.SWDEBUG:
+            print("I/O error({0}): {1}".format(e.errno, e.strerror))
+            print(traceback.format_exc())
 
-            config.BMP280_Present = False
+        config.BMP280_Present = False
 
-
-    if (config.BMP280_Present == True):
+    if config.BMP280_Present == True:
         print("###########################")
         print("BMP280 Present and working")
         print("###########################")
@@ -98,7 +101,6 @@ if __name__ == '__main__':
         print("###########################")
     print()
     print()
-
 
     print("###########################")
     print("Starting Wireless Extender Test")
@@ -114,7 +116,7 @@ if __name__ == '__main__':
 
     myJSON = turnOnTimedValve(singleValve)
 
-    if (len(myJSON) == 0):
+    if len(myJSON) == 0:
         print("###########################")
         print("Wireless Extender ", SGSEXT_IP)
         print("NOT RESPONDING")
@@ -130,4 +132,3 @@ if __name__ == '__main__':
         print("Moisture Sensors:")
         print(myJSON)
         print("###########################")
-

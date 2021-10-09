@@ -1,10 +1,10 @@
-# 
-# 
-# configuration file - DO NOT MODIFY!  
-# Defaullts and Configuration are read from a JSON file.   SGS.JSON 
-# 
-SGSVERSION = "" # set in SGS2.py
-STATIONHARDWARE =""
+#
+#
+# configuration file - DO NOT MODIFY!
+# Defaullts and Configuration are read from a JSON file.   SGS.JSON
+#
+SGSVERSION = ""  # set in SGS2.py
+STATIONHARDWARE = ""
 import uuid
 
 # JSON Holders
@@ -16,9 +16,9 @@ SGSConfigurationJSON = {}
 # Software Debug
 ############
 SWDEBUG = False
-LOCKDEBUG = False 
+LOCKDEBUG = False
 ############
-#MySQL Logging and Password Information
+# MySQL Logging and Password Information
 ############
 enable_MySQL_Logging = False
 MySQL_Password = "password"
@@ -27,9 +27,9 @@ MySQL_Password = "password"
 #########
 enableMail = False
 mailUser = None
-mailPassword = None 
+mailPassword = None
 notifyAddress = None
-fromAddress = None 
+fromAddress = None
 enableText = False
 
 #########
@@ -49,16 +49,16 @@ SolarMAX_Type = None
 BMP280_Altitude_Meters = None
 Sunlight_Gain = None
 weather = False
-# printing the value of unique MAC 
-# address using uuid and getnode() function  
-MACADDRESS = hex(uuid.getnode()) 
+# printing the value of unique MAC
+# address using uuid and getnode() function
+MACADDRESS = hex(uuid.getnode())
 
 ############
 # WeatherSTEM configuration
 ############
 
 STATIONMAC = MACADDRESS
-STATIONHARDWARE=""
+STATIONHARDWARE = ""
 USEWEATHERSTEM = None
 INTERVAL_CAM_PICS__SECONDS = None
 STATIONKEY = None
@@ -75,9 +75,9 @@ WeatherUnderground_StationKey = None
 # Blynk configuration
 ############
 
-USEBLYNK = False 
-BLYNK_AUTH = 'xxxxx'
-BLYNK_URL = 'http://blynk-cloud.com/'
+USEBLYNK = False
+BLYNK_AUTH = "xxxxx"
+BLYNK_URL = "http://blynk-cloud.com/"
 
 
 ############
@@ -110,11 +110,10 @@ moisture_sensor_count = 0
 valve_count = 0
 
 
-
 # if your pumps stick up too high, adjust this value so tank will still ready empty
 Tank_Pump_Level = 15.0
 ############
-#pin defines
+# pin defines
 ############
 
 UltrasonicLevel = 4
@@ -142,15 +141,13 @@ DustSensor_Present = False
 UltrasonicLevel_Present = True
 
 ########
-#Logging
+# Logging
 ########
 
-CRITICAL=50
-ERROR=40
-WARNING=30
-INFO=20
-JSON=15
-DEBUG=10
-NOTSET=0
-
-
+CRITICAL = 50
+ERROR = 40
+WARNING = 30
+INFO = 20
+JSON = 15
+DEBUG = 10
+NOTSET = 0

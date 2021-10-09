@@ -16,30 +16,36 @@ import traceback
 import state
 import buildJSON
 
+
 def readWiredSensors(bmp280):
 
     # read wired sensors
 
-
-    if (config.BMP280_Present):	
+    if config.BMP280_Present:
         try:
             state.BarometricTemperature = round(bmp280.get_temperature(), 2)
-            state.BarometricPressure = round(old_div(bmp280.get_pressure(),1000)*100, 5)
+            state.BarometricPressure = round(
+                old_div(bmp280.get_pressure(), 1000) * 100, 5
+            )
             state.Altitude = round(bmp280.get_altitude(), 4)
-            state.BarometricPressureSeaLevel = round(old_div(bmp280.get_sealevel_pressure(float(config.BMP280_Altitude_Meters)),1000)*100, 5)
+            state.BarometricPressureSeaLevel = round(
+                old_div(
+                    bmp280.get_sealevel_pressure(float(config.BMP280_Altitude_Meters)),
+                    1000,
+                )
+                * 100,
+                5,
+            )
         except:
-            if (config.SWDEBUG):
-                print(traceback.format_exc()) 
+            if config.SWDEBUG:
+                print(traceback.format_exc())
                 print(("readWiredSensors Unexpected error:", sys.exc_info()[0]))
 
-    #print("Looking for buildJSONSemaphore Acquire")
+    # print("Looking for buildJSONSemaphore Acquire")
     state.buildJSONSemaphore.acquire()
-    #print("buildJSONSemaphore Acquired")
+    # print("buildJSONSemaphore Acquired")
     state.currentStateJSON = buildJSON.getStateJSON()
-    #if (config.SWDEBUG):
+    # if (config.SWDEBUG):
     #    print("currentJSON = ", state.currentStateJSON)
     state.buildJSONSemaphore.release()
-    #print("buildJSONSemaphore Released")
-
-
-
+    # print("buildJSONSemaphore Released")
