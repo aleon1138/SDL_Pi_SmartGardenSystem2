@@ -245,28 +245,20 @@ class SGSConfigure(App):
             self.setDefaults()
 
     def saveSGSConfigurationJSON(self):
-
-        data = self.SGSConfigurationJSON
-        # print(data)
-
-        # json_data = json.dumps(data)
-
-        with open("SGSConfiguration.JSON", "w") as outfile:
-            json.dump(data, outfile)
+        with open("SGSConfiguration.JSON", "w") as fp:
+            json.dump(self.SGSConfigurationJSON, fp, indent=2)
 
     def saveJSON(self):
 
-        data = {}
-        data["key"] = "value"
-
-        data["ProgramName"] = "SmartGardenSystem2"
-        data["ConfigVersion"] = "001"
-
-        data["SWDEBUG"] = self.F_SWDEBUG.get_value()
-
-        data["enable_MySQL_Logging"] = self.F_enable_MySQL_Logging.get_value()
-        data["English_Metric"] = self.F_English_Metric.get_value()
-        data["MySQL_Password"] = self.F_MySQL_Password.get_value()
+        data = {
+            "key": "value",
+            "ProgramName": "SmartGardenSystem2",
+            "ConfigVersion": "001",
+            "SWDEBUG": self.F_SWDEBUG.get_value(),
+            "enable_MySQL_Logging": self.F_enable_MySQL_Logging.get_value(),
+            "English_Metric": self.F_English_Metric.get_value(),
+            "MySQL_Password": self.F_MySQL_Password.get_value(),
+        }
 
         data["mailUser"] = self.F_mailUser.get_value()
         data["mailPassword"] = self.F_mailPassword.get_value()
@@ -315,13 +307,8 @@ class SGSConfigure(App):
         data["UltrasonicLevel"] = self.F_UltrasonicLevel.get_value()
         data["pixelPin"] = self.F_pixelPin.get_value()
 
-        # print(data)
-
-        json_data = json.dumps(data)
-        # strip double or triple \\
-
-        with open("SGS.JSON", "w") as outfile:
-            json.dump(data, outfile)
+        with open("SGS.JSON", "w") as fp:
+            json.dump(data, fp, indent=2)
 
     # screen builds
 
@@ -2032,9 +2019,6 @@ configuration = {
     "config_project_name": "SGS Configuration",
     "config_resourcepath": "./res/",
 }
-
-# starts the web server
-# start(SGSConfigure, address='0.0.0.0', port=8001)
 
 start(
     SGSConfigure,

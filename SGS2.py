@@ -45,7 +45,6 @@ import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 import apscheduler.events
 import scanForResources
-
 import config
 import pclogging
 import state
@@ -61,7 +60,7 @@ GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 
 ################
-# Update State Lock - keeps smapling from being interrupted (like by checkAndWater) - Locks I2C Access
+# Update State Lock - keeps sampling from being interrupted (like by checkAndWater) - Locks I2C Access
 ################
 state.UpdateStateLock = threading.Lock()
 
@@ -81,14 +80,9 @@ if config.enablePixel:
         pixelDriver.LED_CHANNEL,
         pixelDriver.LED_STRIP,
     )
-    # Intialize the library (must be called once before other functions).
+    # Initialize the library (must be called once before other functions).
     strip.begin()
     PixelLock = threading.Lock()
-
-
-###############
-# Flash LED
-###############
 
 
 def blinkLED(_, color, times, length):
@@ -119,8 +113,6 @@ try:
 except:
     config.OLED_Present = False
 
-
-# import util
 
 ###############
 # MQTT Setup for Wireless
@@ -199,7 +191,7 @@ def ap_my_listener(event):
 
 
 def returnStatusLine(device, state):
-    out = f"  [{'X' if state else ' '}] {device}"
+    out = f"  [{'x' if state else ' '}] {device}"
     if config.USEBLYNK:
         updateBlynk.blynkTerminalUpdate("Device:" + out)
     return out
@@ -227,17 +219,15 @@ def initializeSGSPart1():
     print("Program Started at:" + time.strftime("%Y-%m-%d %H:%M:%S"))
     print("")
 
-    # read in JSON
-    # read in JSON
     if not readJSON.readJSON(""):
-        print("No SGS.JSON file present", file=sys.stderr)
-        print("configure with 'sudo python3 SGSConfigure.py'", file=sys.stderr)
+        print("no SGS.JSON file present", file=sys.stderr)
+        print("configure with 'python3 SGSConfigure.py'", file=sys.stderr)
         sys.exit()
 
     readJSON.readJSONSGSConfiguration("")
-    # init blynk app state
     if config.USEBLYNK:
         updateBlynk.blynkInit()
+
     message = "SGS Version " + SGSVERSION + " Started"
     pclogging.systemlog(config.INFO, message)
     pclogging.systemlog(config.JSON, "SGS.JSON Loaded: " + json.dumps(config.JSONData))
@@ -251,8 +241,6 @@ def initializeSGSPart1():
     else:
         pclogging.systemlog(config.INFO, "Garden Cam NOT Present")
 
-    # scan and check for resources
-    # get if weather is being used
     config.Weather_Present = readJSON.getJSONValue("weather")
 
 
@@ -280,7 +268,7 @@ def initializeSGSPart2():
     for single in wirelessJSON:
         print(
             returnStatusLine(
-                str(single["name"]) + " - " + str(single["id"]),
+                f"{single['name']} - {single['id']}",
                 state.deviceStatus[str(single["id"])],
             )
         )
@@ -290,26 +278,23 @@ def initializeSGSPart2():
 
     # subscribe to IDs
     if len(wirelessJSON) == 0:
-        print("################################")
-        print("ERROR")
-        print("################################")
-        print("No Wireless SGS uinits present - run SGSConfigure.py")
-        print("################################")
+        print("no Wireless SGS units present", file=sys.stderr)
+        print("configure with 'python3 SGSConfigure.py'", file=sys.stderr)
         sys.exit()
 
     while not state.WirelessMQTTClientConnected:
         time.sleep(0.1)
 
-    # subscribe to IDs
-
     for single in wirelessJSON:
         topic = "SGS/" + single["id"]
         print("subscribing to ", topic)
         state.WirelessMQTTClient.subscribe(topic)
+
         # write out to ValveChanges for startup
-        myJSON = {}
-        myJSON["id"] = single["id"]
-        myJSON["valvestate"] = "V00000000"
+        myJSON = {
+            "id": single["id"],
+            "valvestate": "V00000000",
+        }
         pclogging.writeMQTTValveChangeRecord(myJSON)
 
     print()
@@ -364,10 +349,7 @@ def initializeScheduler():
         # start in 10 seconds
         starttime = datetime.datetime.now() + datetime.timedelta(seconds=30)
 
-        state.scheduler.add_job(
-            weatherSensors.readSensors, run_date=starttime
-        )  # run in background
-
+        state.scheduler.add_job(weatherSensors.readSensors, run_date=starttime)
         state.scheduler.add_job(
             weatherSensors.writeWeatherRecord, "interval", seconds=15 * 60
         )
@@ -406,23 +388,15 @@ def initializeScheduler():
                 seconds=int(config.INTERVAL_CAM_PICS__SECONDS),
             )
 
-    # check for force water - note the interval difference with updateState
-    # state.scheduler.add_job(forceWaterPlantCheck, 'interval', seconds=8)
-
     # every 10 seconds, check for button changes
     state.scheduler.add_job(checkForButtons, "interval", seconds=10)
 
     # check for alarms
     state.scheduler.add_job(checkForAlarms, "interval", seconds=15)
-    # state.scheduler.add_job(checkForAlarms, 'interval', seconds=300)
 
     # MS sensor Read
     AccessMS.initMoistureSensors()
     AccessMS.readAllMoistureSensors()
-
-    # MQTT now updates the Moisture Sensor arrays
-
-    # state.scheduler.add_job(AccessMS.readAllMoistureSensors, 'interval', minutes=15)
 
     # sensor timed water and Timed
     tNow = datetime.datetime.now()
@@ -488,15 +462,11 @@ def restartSGS():
     state.WirelessMQTTClient.disconnect()
     state.WirelessMQTTClient.loop_stop()
     pauseScheduler()
-
     initializeSGSPart1()
     initializeSGSPart2()
-
     initializeScheduler()
     state.scheduler.resume()
-    print("After resume=")
     state.scheduler.print_jobs()
-
     initializeSGSPart3()
 
 

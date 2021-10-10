@@ -34,9 +34,7 @@ def sendCommandToWireless(myIP, myCommand):
 
 
 def turnOnTimedValve(singleValve):
-
     myIP = singleValve["ipaddress"]
-
     myCommand = (
         "setSingleValve?params=admin,"
         + str(singleValve["ValveNumber"])
