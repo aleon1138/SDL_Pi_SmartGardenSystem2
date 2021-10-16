@@ -27,11 +27,7 @@ import subprocess
 from bmp280 import BMP280
 import SkyCamera
 import readJSON
-import logging
-
-logging.basicConfig(level=logging.ERROR)
-
-import updateBlynk
+import logger
 
 sys.path.append("./SDL_Pi_SSD1306")
 sys.path.append("./Adafruit_Python_SSD1306")
@@ -140,9 +136,8 @@ try:
     config.BMP280_Present = True
 except Exception as e:
     if config.SWDEBUG:
-        print("I/O error({0}): {1}".format(e.errno, e.strerror))
-        print(traceback.format_exc())
-
+        logger.log(f"BMP280 error: {e}")
+        logger.log(traceback.format_exc())
     config.BMP280_Present = False
 
 ################
@@ -155,7 +150,7 @@ try:
 
     with picamera.PiCamera() as cam:
         if config.SWDEBUG:
-            print("Pi Camera Revision", cam.revision)
+            logger.log(f"Pi Camera Revision {cam.revision}")
         cam.close()
     config.GardenCam_Present = True
 except:
@@ -169,14 +164,9 @@ except:
 #############################
 
 
-def tick():
-    print(f"The time is: {datetime.datetime.now()}")
-    sys.stdout.flush()
-
-
 def killLogger():
     state.scheduler.shutdown()
-    print("Scheduler Shutdown....")
+    logger.log("Scheduler Shutdown....")
     sys.exit()
 
 
@@ -186,24 +176,13 @@ def checkAndWater():
 
 def ap_my_listener(event):
     if event.exception:
-        print(event.exception)
-        print(event.traceback)
+        logger.log(event.exception)
+        logger.log(event.traceback)
 
 
 def returnStatusLine(device, state):
     out = f"  [{'x' if state else ' '}] {device}"
-    if config.USEBLYNK:
-        updateBlynk.blynkTerminalUpdate("Device:" + out)
     return out
-
-
-def checkForButtons():
-    if config.USEBLYNK:
-        updateBlynk.blynkStatusUpdate()
-
-
-def checkForAlarms():
-    pass
 
 
 #############################
@@ -212,21 +191,16 @@ def checkForAlarms():
 
 
 def initializeSGSPart1():
-    print("###############################################")
-    print("SGS2 Version " + SGSVERSION + "  - SwitchDoc Labs")
-    print("###############################################")
-    print("")
-    print("Program Started at:" + time.strftime("%Y-%m-%d %H:%M:%S"))
-    print("")
+    logger.log("###############################################")
+    logger.log("SGS2 Version " + SGSVERSION + "  - SwitchDoc Labs")
+    logger.log("###############################################")
 
     if not readJSON.readJSON(""):
-        print("no SGS.JSON file present", file=sys.stderr)
-        print("configure with 'python3 SGSConfigure.py'", file=sys.stderr)
+        logger.log("no SGS.JSON file present")
+        logger.log("configure with 'python3 SGSConfigure.py'")
         sys.exit()
 
     readJSON.readJSONSGSConfiguration("")
-    if config.USEBLYNK:
-        updateBlynk.blynkInit()
 
     message = "SGS Version " + SGSVERSION + " Started"
     pclogging.systemlog(config.INFO, message)
@@ -248,16 +222,16 @@ def initializeSGSPart2():
 
     # status reports
 
-    print("----------------------")
-    print("Local Devices")
-    print("----------------------")
-    print(returnStatusLine("OLED", config.OLED_Present))
-    print(returnStatusLine("BMP280", config.BMP280_Present))
-    print(returnStatusLine("DustSensor", config.DustSensor_Present))
+    logger.log("----------------------")
+    logger.log("Local Devices")
+    logger.log("----------------------")
+    logger.log(returnStatusLine("OLED", config.OLED_Present))
+    logger.log(returnStatusLine("BMP280", config.BMP280_Present))
+    logger.log(returnStatusLine("DustSensor", config.DustSensor_Present))
 
-    print("----------------------")
-    print("Checking Wireless SGS Devices")
-    print("----------------------")
+    logger.log("----------------------")
+    logger.log("Checking Wireless SGS Devices")
+    logger.log("----------------------")
 
     scanForResources.updateDeviceStatus(True)
 
@@ -266,7 +240,7 @@ def initializeSGSPart2():
 
     wirelessJSON = readJSON.getJSONValue("WirelessDeviceJSON")
     for single in wirelessJSON:
-        print(
+        logger.log(
             returnStatusLine(
                 f"{single['name']} - {single['id']}",
                 state.deviceStatus[str(single["id"])],
@@ -278,8 +252,8 @@ def initializeSGSPart2():
 
     # subscribe to IDs
     if len(wirelessJSON) == 0:
-        print("no Wireless SGS units present", file=sys.stderr)
-        print("configure with 'python3 SGSConfigure.py'", file=sys.stderr)
+        logger.log("no Wireless SGS units present")
+        logger.log("configure with 'python3 SGSConfigure.py'")
         sys.exit()
 
     while not state.WirelessMQTTClientConnected:
@@ -287,7 +261,7 @@ def initializeSGSPart2():
 
     for single in wirelessJSON:
         topic = "SGS/" + single["id"]
-        print("subscribing to ", topic)
+        logger.log(f"subscribing to {topic}")
         state.WirelessMQTTClient.subscribe(topic)
 
         # write out to ValveChanges for startup
@@ -297,37 +271,26 @@ def initializeSGSPart2():
         }
         pclogging.writeMQTTValveChangeRecord(myJSON)
 
-    print()
-    print("----------------------")
-    print("Plant / Sensor Counts")
-    print("----------------------")
-    config.moisture_sensor_count = len(readJSON.getJSONValue("WirelessDeviceJSON")) * 4
-    config.valve_count = len(readJSON.getJSONValue("WirelessDeviceJSON")) * 8
-    print("Wireless Unit Count:", len(readJSON.getJSONValue("WirelessDeviceJSON")))
-    print("Sensor Count: ", config.moisture_sensor_count)
-    print("Valve Count: ", config.valve_count)
-    print()
-    if config.USEBLYNK:
-        updateBlynk.blynkTerminalUpdate(
-            "Wireless Unit Count:%d" % len(readJSON.getJSONValue("WirelessDeviceJSON"))
-        )
-        updateBlynk.blynkTerminalUpdate(
-            "Sensor Count: %d" % config.moisture_sensor_count
-        )
-        updateBlynk.blynkTerminalUpdate("Pump Count: %d" % config.valve_count)
-        updateBlynk.updateStaticBlynk()
+    num_wireless_dev = len(readJSON.getJSONValue("WirelessDeviceJSON"))
+    config.moisture_sensor_count = num_wireless_dev * 4
+    config.valve_count = num_wireless_dev * 8
 
-    print("----------------------")
-    print("Other Smart Garden System Expansions")
-    print("----------------------")
-    print(returnStatusLine("Weather", config.Weather_Present))
-    print(returnStatusLine("GardenCam", config.GardenCam_Present))
-    print(returnStatusLine("SunAirPlus", config.SunAirPlus_Present))
-    print(returnStatusLine("SolarMAX", config.SunAirPlus_Present))
-    print(returnStatusLine("Lightning Mode", config.Lightning_Mode))
-    print(returnStatusLine("MySQL Logging Mode", config.enable_MySQL_Logging))
-    print(returnStatusLine("UseBlynk", config.USEBLYNK))
-    print("----------------------")
+    logger.log("----------------------")
+    logger.log("Plant / Sensor Counts")
+    logger.log("----------------------")
+    logger.log(f"Wireless Unit Count: {num_wireless_dev}")
+    logger.log(f"Sensor Count: {config.moisture_sensor_count}")
+    logger.log(f"Valve Count: {config.valve_count}")
+    logger.log("----------------------")
+    logger.log("Other Smart Garden System Expansions")
+    logger.log("----------------------")
+    logger.log(returnStatusLine("Weather", config.Weather_Present))
+    logger.log(returnStatusLine("GardenCam", config.GardenCam_Present))
+    logger.log(returnStatusLine("SunAirPlus", config.SunAirPlus_Present))
+    logger.log(returnStatusLine("SolarMAX", config.SunAirPlus_Present))
+    logger.log(returnStatusLine("Lightning Mode", config.Lightning_Mode))
+    logger.log(returnStatusLine("MySQL Logging Mode", config.enable_MySQL_Logging))
+    logger.log("----------------------")
     sys.stdout.flush()
 
     # Establish WeatherSTEMHash
@@ -339,14 +302,8 @@ def initializeScheduler():
 
     state.scheduler.add_listener(ap_my_listener, apscheduler.events.EVENT_JOB_ERROR)
 
-    # prints out the date and time to console
-    state.scheduler.add_job(tick, "interval", seconds=5 * 60)
-
-    # read wireless sensor package
-    # print("Before Adding readSensors Job")
     if config.Weather_Present:
-        print("Adding readSensors Job")
-        # start in 10 seconds
+        logger.log("Adding readSensors Job")
         starttime = datetime.datetime.now() + datetime.timedelta(seconds=30)
 
         state.scheduler.add_job(weatherSensors.readSensors, run_date=starttime)
@@ -388,12 +345,6 @@ def initializeScheduler():
                 seconds=int(config.INTERVAL_CAM_PICS__SECONDS),
             )
 
-    # every 10 seconds, check for button changes
-    state.scheduler.add_job(checkForButtons, "interval", seconds=10)
-
-    # check for alarms
-    state.scheduler.add_job(checkForAlarms, "interval", seconds=15)
-
     # MS sensor Read
     AccessMS.initMoistureSensors()
     AccessMS.readAllMoistureSensors()
@@ -416,15 +367,7 @@ def initializeScheduler():
 
 
 def initializeSGSPart3():
-    if config.SWDEBUG:
-        if config.USEBLYNK:
-            print("Blynk Status=", updateBlynk.blynkSGSAppOnline())
-            updateBlynk.blynkAlarmUpdate()
-
     state.Last_Event = "SGS Started:" + time.strftime("%Y-%m-%d %H:%M:%S")
-
-    if config.USEBLYNK:
-        updateBlynk.blynkEventUpdate()
 
     if config.OLED_Present:
         with OLEDLock:
@@ -438,23 +381,20 @@ def initializeSGSPart3():
 
     state.Pump_Water_Full = False
     checkAndWater()
-    checkForAlarms()
 
 
 def pauseScheduler():
-
     state.scheduler.print_jobs()
-
     jobs = state.scheduler.get_jobs()
-    print("get_jobs=", jobs)
+    logger.log(f"get_jobs={jobs}")
     state.scheduler.print_jobs()
     for job in jobs:
         state.scheduler.remove_job(job.id)
 
     jobs = state.scheduler.get_jobs()
-    print("After get_jobs=", jobs)
+    logger.log(f"After get_jobs={jobs}")
     state.scheduler.pause()
-    print("After get_jobs=", jobs)
+    logger.log(f"After get_jobs={jobs}")
     state.scheduler.print_jobs()
 
 
@@ -478,23 +418,21 @@ def restartSGS():
 if __name__ == "__main__":
 
     if config.SWDEBUG:
-        print("Starting pigpio daemon")
+        logger.log("Starting pigpio daemon")
 
     # kill all pigpio instances
     try:
         cmd = ["killall", "pigpiod"]
         output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
-        print(output)
+        logger.log(output)
         time.sleep(5)
     except:
         pass
 
     cmd = ["/usr/bin/pigpiod"]
     output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
-    print(output)
-    ################
-    # Dust Sensor Setup
-    ################
+    logger.log(output)
+
     import DustSensor
 
     try:
@@ -515,26 +453,25 @@ if __name__ == "__main__":
         initializeScheduler()
 
         state.scheduler.start()
-        print("-----------------")
-        print("Scheduled Jobs")
+        logger.log("-----------------")
+        logger.log("Scheduled Jobs")
         state.scheduler.print_jobs()
-        print("-----------------")
+        logger.log("-----------------")
 
         initializeSGSPart3()
 
         while True:
             if os.path.exists("NEWJSON"):
-                print("New JSON files detected, reloading...")
                 os.remove("NEWJSON")
                 restartSGS()
                 pclogging.systemlog(config.INFO, "Reloading SGS with New JSON")
             time.sleep(10)
 
     except KeyboardInterrupt:
-        print("exiting program")
+        logger.log("exiting program")
 
     finally:
         AccessValves.turnOffAllValves()
         state.WirelessMQTTClient.disconnect()
         state.WirelessMQTTClient.loop_stop()
-        print("done")
+        logger.log("done")
