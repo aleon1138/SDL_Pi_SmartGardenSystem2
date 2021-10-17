@@ -403,7 +403,7 @@ def restartSGS():
     initializeScheduler()
     state.scheduler.resume()
     for job in state.scheduler.get_jobs():
-        logger.log("job: {job}")
+        logger.log(f"job: {job}")
     initializeSGSPart3()
 
 
