@@ -384,18 +384,14 @@ def initializeSGSPart3():
 
 
 def pauseScheduler():
-    state.scheduler.print_jobs()
     jobs = state.scheduler.get_jobs()
     logger.log(f"get_jobs={jobs}")
-    state.scheduler.print_jobs()
     for job in jobs:
         state.scheduler.remove_job(job.id)
 
     jobs = state.scheduler.get_jobs()
     logger.log(f"After get_jobs={jobs}")
     state.scheduler.pause()
-    logger.log(f"After get_jobs={jobs}")
-    state.scheduler.print_jobs()
 
 
 def restartSGS():
@@ -406,7 +402,8 @@ def restartSGS():
     initializeSGSPart2()
     initializeScheduler()
     state.scheduler.resume()
-    state.scheduler.print_jobs()
+    for job in state.scheduler.get_jobs():
+        logger.log("job: {job}")
     initializeSGSPart3()
 
 
