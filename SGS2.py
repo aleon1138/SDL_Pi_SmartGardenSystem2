@@ -394,24 +394,6 @@ def pauseScheduler():
     state.scheduler.pause()
 
 
-def restartSGS():
-    state.WirelessMQTTClient.disconnect()
-    state.WirelessMQTTClient.loop_stop()
-    pauseScheduler()
-    initializeSGSPart1()
-    initializeSGSPart2()
-    initializeScheduler()
-    state.scheduler.resume()
-    for job in state.scheduler.get_jobs():
-        logger.log(f"job: {job}")
-    initializeSGSPart3()
-
-
-#############################
-# main program
-#############################
-
-# Main Program
 if __name__ == "__main__":
 
     if config.SWDEBUG:
@@ -441,26 +423,32 @@ if __name__ == "__main__":
         DustSensor.powerOffDustSensor()
         config.DustSensor_Present = False
     pclogging.readLastHour24AQI()
-    initializeSGSPart1()
 
     try:
+        initializeSGSPart1()
         initializeSGSPart2()
         state.scheduler = BackgroundScheduler()
-
         initializeScheduler()
-
         state.scheduler.start()
-        logger.log("-----------------")
-        logger.log("Scheduled Jobs")
-        state.scheduler.print_jobs()
-        logger.log("-----------------")
-
+        for job in state.scheduler.get_jobs():
+            logger.log(f"job: {job}")
         initializeSGSPart3()
 
         while True:
             if os.path.exists("NEWJSON"):
                 os.remove("NEWJSON")
-                restartSGS()
+
+                state.WirelessMQTTClient.disconnect()
+                state.WirelessMQTTClient.loop_stop()
+                pauseScheduler()
+                initializeSGSPart1()
+                initializeSGSPart2()
+                initializeScheduler()
+                state.scheduler.resume()
+                for job in state.scheduler.get_jobs():
+                    logger.log(f"job: {job}")
+                initializeSGSPart3()
+
                 pclogging.systemlog(config.INFO, "Reloading SGS with New JSON")
             time.sleep(10)
 
